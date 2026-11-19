@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Online Task Hub</title>
 
     <style>
@@ -42,17 +41,62 @@
             box-shadow: 0 3px 12px #00000012;
         }
 
+        .top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
         h2 {
+            margin: 0;
             color: #142b50;
         }
 
-        iframe {
-            display: block;
+        .user-badge {
+            background: #eef3fa;
+            color: #142b50;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            word-break: break-all;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            border: 1px solid #142b50;
+            background: white;
+            color: #142b50;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab-btn.active {
+            background: #142b50;
+            color: white;
+        }
+
+        .wall-frame {
+            display: none;
             width: 100%;
-            height: 720px;
+            height: 760px;
             border: 0;
-            max-width: 900px;
+            max-width: 100%;
             border-radius: 12px;
+        }
+
+        .wall-frame.active {
+            display: block;
         }
 
         footer {
@@ -74,16 +118,36 @@
 
     <section class="card">
 
-        <h2>Available Tasks</h2>
+        <div class="top-bar">
+            <h2>Available Tasks</h2>
+            <div class="user-badge">User ID: <span id="user-id-display">Loading...</span></div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-target="octoclix">OctoClix</button>
+            <button class="tab-btn" data-target="offerzono">OfferZono</button>
+        </div>
 
         <iframe
             id="octoclix"
+            class="wall-frame active"
             title="OctoClix Offerwall"
             src="about:blank"
             width="100%"
-            height="720"
-            style="border:0;max-width:900px;border-radius:12px;"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox">
+            height="760"
+            allow="identity-credentials-get; clipboard-write"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-top-navigation-by-user-activation">
+        </iframe>
+
+        <iframe
+            id="offerzono"
+            class="wall-frame"
+            title="OfferZono Offerwall"
+            src="about:blank"
+            width="100%"
+            height="760"
+            allow="identity-credentials-get; clipboard-write"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-top-navigation-by-user-activation">
         </iframe>
 
     </section>
@@ -95,29 +159,43 @@
 </footer>
 
 <script>
+    const OCTOCLIX_SITE_KEY = "TTGnMr55FuvgfuXqFWy7c86A";
+    const OFFERZONO_KEY = "06c4d5027d1d3efe3d237b01dd7d1d1c";
 
-    // Your OctoClix Site Key
-    const SITE_KEY = "TTGnMr55FuvgfuXqFWy7c86A";
-
-    // Create a stable test user ID
-    let userID = localStorage.getItem("octoclix_user_id");
-
+    let userID = localStorage.getItem("taskhub_user_id") || localStorage.getItem("octoclix_user_id");
     if (!userID) {
         userID = "guest_" + crypto.randomUUID();
-
-        localStorage.setItem("octoclix_user_id", userID);
     }
+    localStorage.setItem("taskhub_user_id", userID);
+    document.getElementById("user-id-display").textContent = userID;
 
-    // Official OctoClix Offerwall URL
-    const offerwallURL =
+    const octoclixURL =
         "https://octoclix.com/ow/" +
-        encodeURIComponent(SITE_KEY) +
+        encodeURIComponent(OCTOCLIX_SITE_KEY) +
         "/" +
         encodeURIComponent(userID);
 
-    // Load Offerwall
-    document.getElementById("octoclix").src = offerwallURL;
+    const offerzonoURL =
+        "https://offerzono.com/offerwall?key=" +
+        encodeURIComponent(OFFERZONO_KEY) +
+        "&userid=" +
+        encodeURIComponent(userID);
 
+    document.getElementById("octoclix").src = octoclixURL;
+    document.getElementById("offerzono").src = offerzonoURL;
+
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const frames = document.querySelectorAll(".wall-frame");
+
+    tabButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const targetId = btn.getAttribute("data-target");
+            tabButtons.forEach((b) => b.classList.remove("active"));
+            frames.forEach((f) => f.classList.remove("active"));
+            btn.classList.add("active");
+            document.getElementById(targetId).classList.add("active");
+        });
+    });
 </script>
 
 </body>
